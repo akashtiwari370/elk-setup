@@ -1,0 +1,77 @@
+---
+# tasks file for efk-rol
+- name: Installing java
+  package:
+         name: default-jre
+         state: present
+
+- name: Adding key
+  apt_key:
+          url: https://artifacts.elastic.co/GPG-KEY-elasticsearch
+          state: present
+- name: Installing apt-transport-https
+  package:
+          name: apt-transport-https
+          state: present
+
+- name: making changes
+  command: 'echo "deb https://artifacts.elastic.co/packages/7.x/apt stable main"'
+
+- name: making more changes
+  command: 'sudo tee -a /etc/apt/sources.list.d/elastic-7.x.list'  
+
+- name: Updating repo
+  command: sudo apt-get update
+
+- name: Installing elastic search
+  package:
+          name: elasticsearch
+          state: present
+- name: Copying template for elastic search
+  template:
+          src: elasticsearch.yml.j2
+          dest: /etc/elasticsearch/elasticsearch.yml 
+
+- name: Copying options file
+  template: 
+        src: jvm.options.j2
+        dest: /etc/elasticsearch/jvm.options
+
+- name: Starting elastic search service
+  service:
+          name: elasticsearch
+          state: started
+
+- name: Installing logstash
+  package:
+          name: logstash
+          state: present  
+- name: Creating test file
+  template: 
+        src: test_log.log.j2
+        dest: /home/test_log.log
+
+- name: Creating logstash config file
+  template:
+          src: apache-01.conf.j2
+          dest: /etc/logstash/conf.d/apache-01.conf
+
+- name: Starting logstash
+  service: 
+        name: logstash
+        state: started
+
+- name: Installing kibana
+  package:
+          name: kibana
+          state: present
+
+- name: Copying kibana conf file
+  template:
+          src: kibana.yml.j2
+          dest: /etc/kibana/kibana.yml
+
+- name: starting kibana service on Instance ip at port 5601
+  service:
+          name: kibana
+          state: started  
